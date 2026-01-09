@@ -1,16 +1,42 @@
-# React + Vite
+### 2. File README cho Frontend (`techgear-frontend/README.md`)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+File này tập trung vào cách cài node modules và chạy giao diện.
 
-Currently, two official plugins are available:
+```markdown
+# TechGear Store - Frontend (Client)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 1. Giới thiệu (Overview)
+Đây là giao diện người dùng (Client-side) của dự án **TechGear Store**.
+Ứng dụng cho phép người dùng xem sản phẩm, đặt hàng và Admin quản lý hệ thống.
 
-## React Compiler
+## 2. Công nghệ sử dụng (Tech Stack)
+- **Framework:** ReactJS (Build tool: Vite)
+- **UI Library:** Ant Design (Antd)
+- **Routing:** React Router Dom v6
+- **HTTP Client:** Axios
+- **State Management:** React Hooks / Redux (Tùy chọn)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 3. Yêu cầu hệ thống
+- Node.js (Phiên bản 16 trở lên).
+- npm (đi kèm với Node.js).
 
-## Expanding the ESLint configuration
+## 4. Hướng dẫn cài đặt & Chạy (Installation & Run)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Bước 1: Cài đặt thư viện
+Mở Terminal tại thư mục gốc của dự án frontend và chạy:
+```bash
+npm install
+
+### Bước 2: Cấu hình môi trường (Optional)
+Nếu Backend không chạy ở cổng 8080, hãy vào file cấu hình (ví dụ src/api/axiosClient.js) để chỉnh lại BASE_URL
+### Bước 3: Chạy ứng dụng (Development Mode)
+npm run dev
+
+Sau khi chạy, truy cập vào đường link hiển thị trên terminal (thường là http://localhost:5173).
+
+## 5. Cấu trúc thư mục
+/src/components: Các thành phần tái sử dụng (Header, Footer...).
+
+/src/pages: Các trang chính (Home, Login, ProductDetail...).
+
+/src/services: Cấu hình gọi API sang Backend.
