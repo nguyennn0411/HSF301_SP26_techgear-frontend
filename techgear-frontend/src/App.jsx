@@ -1,35 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
 
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ProductDetail from './pages/ProductDetail';
+import AdminProductList from './pages/admin/AdminProductList';
+import ProductForm from './pages/admin/ProductForm';
+import Cart from './pages/Cart.jsx';
 function App() {
-  const [count, setCount] = useState(0)
+  console.log("App Component đang Render..."); // Kiểm tra xem App có chạy vào đây không
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+    
+      
+
+      {/* KHU VỰC HIỂN THỊ NỘI DUNG */}
+      <div style={{ border: '2px dashed #ccc', padding: '20px' }}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          {/* Trang báo lỗi nếu sai đường dẫn */}
+          <Route path="*" element={<h1>404 - Đường dẫn không tồn tại</h1>} />
+          <Route path="/admin/products" element={<AdminProductList />} />
+          <Route path="/admin/products/new" element={<ProductForm />} />
+          <Route path="/admin/products/edit/:id" element={<ProductForm />} />
+          <Route path="/cart" element={<Cart />} />
+
+        </Routes>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
