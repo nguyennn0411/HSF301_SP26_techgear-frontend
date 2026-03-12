@@ -1,148 +1,261 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { createAdminProduct, getAdminProductById, updateAdminProduct } from '../../api/adminProductApi';
 import api from '../../api/axios';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
 const ProductForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  // State quản lý danh sách từ Database
+  const isEdit = !!id;
+
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  
-  // State quản lý dữ liệu Form
+
   const [formData, setFormData] = useState({
-    name: '', price: '', stock: '', description: '', 
-    imageUrl: '', color: '', size: '', isActive: true,
-    category: { id: '' }, 
-    brand: { id: '' }
+    name: '',
+    description: '',
+    price: '',
+    stock: '',
+    color: '',
+    size: '',
+    imageUrl: '',
+    isActive: true,
+    categoryId: '',
+    brandId: '',
   });
 
-  useEffect(() => {
-    // 1. Lấy dữ liệu Category và Brand để đổ vào Dropdown
-    const fetchData = async () => {
-      try {
-        const [catRes, brandRes] = await Promise.all([
-          api.get('/categories'), // Giả định bạn đã có @GetMapping("/api/categories")
-          api.get('/brands/active') // Gọi API lấy brand đang active bạn đã viết
-        ]);
-        setCategories(catRes.data);
-        setBrands(brandRes.data);
-      } catch (err) {
-        console.error("Lỗi tải danh mục/thương hiệu", err);
-      }
-    };
+  const fetchCategoriesAndBrands = async () => {
+    try {
+      const [categoryRes, brandRes] = await Promise.all([
+        api.get('/categories'),
+        api.get('/brands'),
+      ]);
 
-    fetchData();
+      setCategories(categoryRes.data || []);
+      setBrands(brandRes.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-    // 2. Nếu là Edit, lấy thông tin sản phẩm cũ
-    if (id) {
-      api.get(`/products/${id}`).then(res => {
-        const p = res.data;
-        setFormData({
-          ...p,
-          category: { id: p.category?.id || '' },
-          brand: { id: p.brand?.id || '' }
-        });
+  const fetchProduct = async () => {
+    try {
+      const data = await getAdminProductById(id);
+
+      setFormData({
+        name: data.name || '',
+        description: data.description || '',
+        price: data.price || '',
+        stock: data.stock || '',
+        color: data.color || '',
+        size: data.size || '',
+        imageUrl: data.imageUrl || '',
+        isActive: data.isActive ?? true,
+        categoryId: data.categoryId || '',
+        brandId: data.brandId || '',
       });
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data || 'Không thể tải dữ liệu sản phẩm');
+    }
+  };
+
+  useEffect(() => {
+    fetchCategoriesAndBrands();
+    if (isEdit) {
+      fetchProduct();
     }
   }, [id]);
 
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      if (id) {
-        await api.put(`/products/${id}`, formData);
+      const payload = {
+        ...formData,
+        price: Number(formData.price),
+        stock: Number(formData.stock),
+        categoryId: Number(formData.categoryId),
+        brandId: Number(formData.brandId),
+      };
+
+      if (isEdit) {
+        await updateAdminProduct(id, payload);
+        alert('Cập nhật sản phẩm thành công');
       } else {
-        await api.post('/products', formData);
+        await createAdminProduct(payload);
+        alert('Thêm sản phẩm thành công');
       }
-      alert("Lưu sản phẩm thành công!");
+
       navigate('/admin/products');
-    } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể lưu"));
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data || 'Không thể lưu sản phẩm');
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 bg-white shadow-2xl mt-10 rounded-xl border border-gray-100">
-      <h2 className="text-3xl font-extrabold mb-8 text-gray-800 border-b pb-4">
-        {id ? ' chỉnh sửa sản phẩm' : ' Thêm sản phẩm mới'}
-      </h2>
-      
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Tên sản phẩm */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-bold text-gray-700 mb-1">Tên sản phẩm *</label>
-          <input type="text" className="w-full border-gray-300 border p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
-            value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-        </div>
+    <div className="container py-4">
+      <h2 className="mb-4">{isEdit ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm'}</h2>
 
-        {/* Giá và Kho */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-1">Giá bán (VNĐ) *</label>
-          <input type="number" className="w-full border-gray-300 border p-2.5 rounded-lg" 
-            value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} required />
-        </div>
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-1">Số lượng trong kho *</label>
-          <input type="number" className="w-full border-gray-300 border p-2.5 rounded-lg" 
-            value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} required />
-        </div>
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <form onSubmit={handleSubmit}>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label">Tên sản phẩm</label>
+                <input
+                  className="form-control"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-        {/* Dropdown Danh mục */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-1">Danh mục *</label>
-          <select 
-            className="w-full border-gray-300 border p-2.5 rounded-lg bg-white cursor-pointer"
-            value={formData.category.id} 
-            onChange={e => setFormData({...formData, category: {id: e.target.value}})}
-            required
-          >
-            <option value="">-- Chọn danh mục --</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
-        </div>
+              <div className="col-md-6">
+                <label className="form-label">Ảnh URL</label>
+                <input
+                  className="form-control"
+                  name="imageUrl"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                />
+              </div>
 
-        {/* Dropdown Thương hiệu */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-1">Thương hiệu *</label>
-          <select 
-            className="w-full border-gray-300 border p-2.5 rounded-lg bg-white cursor-pointer"
-            value={formData.brand.id} 
-            onChange={e => setFormData({...formData, brand: {id: e.target.value}})}
-            required
-          >
-            <option value="">-- Chọn thương hiệu --</option>
-            {brands.map(b => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-        </div>
+              <div className="col-12">
+                <label className="form-label">Mô tả</label>
+                <textarea
+                  className="form-control"
+                  rows="4"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                />
+              </div>
 
-        {/* URL Ảnh */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-bold text-gray-700 mb-1">Link hình ảnh</label>
-          <input type="text" className="w-full border-gray-300 border p-2.5 rounded-lg" 
-            value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} />
-        </div>
+              <div className="col-md-3">
+                <label className="form-label">Giá</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-        {/* Trạng thái kinh doanh */}
-        <div className="md:col-span-2 flex items-center gap-2">
-          <input type="checkbox" id="isActive" checked={formData.isActive}
-            onChange={e => setFormData({...formData, isActive: e.target.checked})} 
-            className="w-5 h-5 cursor-pointer" />
-          <label htmlFor="isActive" className="text-sm font-bold text-gray-700 cursor-pointer">Cho phép hiển thị trên cửa hàng</label>
-        </div>
+              <div className="col-md-3">
+                <label className="form-label">Tồn kho</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-        {/* Nút Submit */}
-        <div className="md:col-span-2 mt-4">
-          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition">
-            {id ? 'CẬP NHẬT SẢN PHẨM' : 'TẠO SẢN PHẨM MỚI'}
-          </button>
+              <div className="col-md-3">
+                <label className="form-label">Màu</label>
+                <input
+                  className="form-control"
+                  name="color"
+                  value={formData.color}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Size</label>
+                <input
+                  className="form-control"
+                  name="size"
+                  value={formData.size}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Category</label>
+                <select
+                  className="form-select"
+                  name="categoryId"
+                  value={formData.categoryId}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Chọn category</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Brand</label>
+                <select
+                  className="form-select"
+                  name="brandId"
+                  value={formData.brandId}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Chọn brand</option>
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-12">
+                <div className="form-check">
+                  <input
+                    id="isActive"
+                    type="checkbox"
+                    className="form-check-input"
+                    name="isActive"
+                    checked={formData.isActive}
+                    onChange={handleChange}
+                  />
+                  <label htmlFor="isActive" className="form-check-label">
+                    Đang bán
+                  </label>
+                </div>
+              </div>
+
+              <div className="col-12 d-flex gap-2">
+                <button className="btn btn-dark" type="submit">
+                  {isEdit ? 'Cập nhật' : 'Tạo mới'}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => navigate('/admin/products')}
+                >
+                  Quay lại
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

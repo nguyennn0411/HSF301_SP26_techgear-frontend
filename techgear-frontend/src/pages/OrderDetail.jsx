@@ -42,14 +42,27 @@ const OrderDetail = () => {
   if (!order) return <div className="container py-4">Không tìm thấy đơn hàng.</div>;
 
   return (
-    <div className="container py-4">
+       <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Chi tiết đơn hàng #{order.orderId}</h2>
-        {order.status === 'PENDING' && (
-          <button className="btn btn-outline-danger" onClick={handleCancel}>
-            Hủy đơn
-          </button>
-        )}
+
+        <div className="d-flex gap-2">
+          {order.status === 'PENDING' && (
+            <button className="btn btn-outline-danger" onClick={handleCancel}>
+              Hủy đơn
+            </button>
+          )}
+
+          {order.paymentMethod === 'ONLINE' && order.paymentStatus !== 'PAID' && (
+            <Link
+              to={`/payment/${order.orderId}`}
+              state={{ order }}
+              className="btn btn-success"
+            >
+              Thanh toán ngay
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="card shadow-sm mb-4">
@@ -58,6 +71,8 @@ const OrderDetail = () => {
           <p><strong>Ngày tạo:</strong> {new Date(order.createdAt).toLocaleString()}</p>
           <p><strong>Mã giảm giá:</strong> {order.couponCode || 'Không có'}</p>
           <p><strong>Giảm giá:</strong> {order.discountPercent ? `${order.discountPercent}%` : '0%'}</p>
+          <p><strong>Phương thức thanh toán:</strong> {order.paymentMethod}</p>
+          <p><strong>Trạng thái thanh toán:</strong> {order.paymentStatus}</p>
           <p className="mb-0">
             <strong>Tổng tiền:</strong>{' '}
             <span className="text-danger fw-bold">{order.total?.toLocaleString()}đ</span>

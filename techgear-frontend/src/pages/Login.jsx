@@ -11,18 +11,23 @@ const Login = () => {
   e.preventDefault();
   try {
     const response = await api.post('/auth/login', formData);
-    
-    // In ra console để kiểm tra xem Backend trả về gì
+
     console.log("Login Success Data:", response.data);
 
-    // Backend của bạn trả về JwtResponse (token, id, username, role)
-    // Phải lưu response.data (chứa id) chứ không chỉ mỗi token
     localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data)); 
+    localStorage.setItem('role', response.data.role);
+    localStorage.setItem('email', response.data.email || response.data.username || '');
+    localStorage.setItem('user', JSON.stringify(response.data));
 
     alert('Đăng nhập thành công!');
-    navigate('/');
-    window.location.reload(); // Ép App load lại để CartContext nhận User mới
+
+    if (response.data.role === 'STAFF' || response.data.role === 'OWNER' || response.data.role === 'ADMIN') {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/');
+    }
+
+    window.location.reload();
   } catch (err) {
     setError('Đăng nhập thất bại');
   }
@@ -38,7 +43,7 @@ const Login = () => {
           <input
             type="email"
             className="w-full p-2 border rounded"
-            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
           />
         </div>
@@ -47,7 +52,7 @@ const Login = () => {
           <input
             type="password"
             className="w-full p-2 border rounded"
-            onChange={(e) => setFormData({...formData, password: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             required
           />
         </div>

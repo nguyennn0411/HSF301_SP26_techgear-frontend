@@ -6,7 +6,9 @@ import { createOrder } from '../api/orderApi';
 const Checkout = () => {
   const navigate = useNavigate();
   const { cart, fetchCart } = useCart();
+
   const [couponCode, setCouponCode] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('COD');
   const [submitting, setSubmitting] = useState(false);
 
   const items = cart?.items || [];
@@ -20,16 +22,26 @@ const Checkout = () => {
     try {
       setSubmitting(true);
 
-      const payload = couponCode.trim()
-        ? { couponCode: couponCode.trim() }
-        : {};
+      const payload = {
+        paymentMethod,
+      };
+
+      if (couponCode.trim()) {
+        payload.couponCode = couponCode.trim();
+      }
 
       const order = await createOrder(payload);
       await fetchCart();
 
-      navigate('/order-success', {
-        state: { order },
-      });
+      if (paymentMethod === 'ONLINE') {
+        navigate(`/payment/${order.orderId}`, {
+          state: { order },
+        });
+      } else {
+        navigate('/order-success', {
+          state: { order },
+        });
+      }
     } catch (error) {
       console.error('Lỗi tạo đơn hàng:', error.response?.data || error.message);
       alert(error.response?.data || 'Không thể đặt hàng');
@@ -68,7 +80,10 @@ const Checkout = () => {
                       {item.quantity} x {item.unitPrice?.toLocaleString()}đ
                     </small>
                   </div>
-                  <div className="fw-bold">{item.lineTotal?.toLocaleString()}đ</div>
+
+                  <div className="fw-bold text-danger">
+                    {item.lineTotal?.toLocaleString()}đ
+                  </div>
                 </div>
               ))}
             </div>
@@ -89,6 +104,18 @@ const Checkout = () => {
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
                 />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Phương thức thanh toán</label>
+                <select
+                  className="form-select"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                >
+                  <option value="COD">Thanh toán khi nhận hàng</option>
+                  <option value="ONLINE">Thanh toán online</option>
+                </select>
               </div>
 
               <div className="d-flex justify-content-between mb-2">

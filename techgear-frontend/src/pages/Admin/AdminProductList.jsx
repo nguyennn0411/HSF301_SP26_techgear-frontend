@@ -1,60 +1,154 @@
 import React, { useEffect, useState } from 'react';
-import api from '../../api/axios';
 import { Link } from 'react-router-dom';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { deleteAdminProduct, getAdminProducts } from '../../api/adminProductApi';
+
 const AdminProductList = () => {
   const [products, setProducts] = useState([]);
-
-  useEffect(() => { fetchProducts(); }, []);
+  const [keyword, setKeyword] = useState('');
+  const [activeOnly, setActiveOnly] = useState(false);
 
   const fetchProducts = async () => {
-    const res = await api.post('/products/filter', {}); // Lấy tất cả không lọc
-    setProducts(res.data);
-  };
+    try {
+      const params = {};
+      if (keyword.trim()) params.keyword = keyword.trim();
+      if (activeOnly) params.activeOnly = true;
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xoá sản phẩm này?")) {
-      try {
-        await api.delete(`/products/${id}`); // Gọi deleteMapping trong Controller
-        setProducts(products.filter(p => p.id !== id));
-        alert("Xoá thành công!");
-      } catch (err) { alert("Lỗi khi xoá sản phẩm"); }
+      const data = await getAdminProducts(params);
+      setProducts(data || []);
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data || 'Không thể tải danh sách sản phẩm');
     }
   };
 
+  useEffect(() => {
+    fetchProducts();
+  }, [activeOnly]);
+
+  const handleDelete = async (id) => {
+    const ok = window.confirm('Bạn có chắc muốn xóa sản phẩm này không?');
+    if (!ok) return;
+
+    try {
+      await deleteAdminProduct(id);
+      await fetchProducts();
+      alert('Xóa sản phẩm thành công');
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data || 'Không thể xóa sản phẩm');
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    await fetchProducts();
+  };
+
   return (
-    <div className="p-8">
-      <div className="flex justify-between mb-6">
-        <h1 className="text-2xl font-bold">Quản lý Sản phẩm</h1>
-        <Link to="/admin/products/new" className="bg-green-600 text-white px-4 py-2 rounded">
-          + Thêm sản phẩm mới
+    <div className="container py-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Quản lý sản phẩm</h2>
+        <Link to="/admin/products/new" className="btn btn-dark">
+          Thêm sản phẩm
         </Link>
       </div>
-      <table className="w-full bg-white shadow-md rounded">
-        <thead>
-          <tr className="bg-gray-200 text-left">
-            <th className="p-3">ID</th>
-            <th className="p-3">Tên</th>
-            <th className="p-3">Giá</th>
-            <th className="p-3">Kho</th>
-            <th className="p-3">Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map(p => (
-            <tr key={p.id} className="border-b">
-              <td className="p-3">{p.id}</td>
-              <td className="p-3 font-medium">{p.name}</td>
-              <td className="p-3">{p.price?.toLocaleString()}đ</td>
-              <td className="p-3">{p.stock}</td>
-              <td className="p-3">
-                <Link to={`/admin/products/edit/${p.id}`} className="text-blue-600 mr-3">Sửa</Link>
-                <button onClick={() => handleDelete(p.id)} className="text-red-600">Xoá</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <form className="row g-2 mb-4" onSubmit={handleSearch}>
+        <div className="col-md-8">
+          <input
+            className="form-control"
+            placeholder="Tìm theo tên sản phẩm..."
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+          />
+        </div>
+
+        <div className="col-md-2 d-flex align-items-center">
+          <div className="form-check">
+            <input
+              id="activeOnly"
+              className="form-check-input"
+              type="checkbox"
+              checked={activeOnly}
+              onChange={(e) => setActiveOnly(e.target.checked)}
+            />
+            <label htmlFor="activeOnly" className="form-check-label">
+              Chỉ active
+            </label>
+          </div>
+        </div>
+
+        <div className="col-md-2">
+          <button className="btn btn-outline-dark w-100" type="submit">
+            Tìm kiếm
+          </button>
+        </div>
+      </form>
+
+      <div className="card shadow-sm">
+        <div className="card-body table-responsive">
+          <table className="table align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Ảnh</th>
+                <th>Tên</th>
+                <th>Giá</th>
+                <th>Kho</th>
+                <th>Category</th>
+                <th>Brand</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="text-center">Không có sản phẩm</td>
+                </tr>
+              ) : (
+                products.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.id}</td>
+                    <td>
+                      <img
+                        src={p.imageUrl || 'https://via.placeholder.com/60x60?text=No+Image'}
+                        alt={p.name}
+                        style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }}
+                      />
+                    </td>
+                    <td>{p.name}</td>
+                    <td className="text-danger fw-bold">{p.price?.toLocaleString()}đ</td>
+                    <td>{p.stock}</td>
+                    <td>{p.categoryName || 'N/A'}</td>
+                    <td>{p.brandName || 'N/A'}</td>
+                    <td>
+                      {p.isActive ? (
+                        <span className="badge text-bg-success">Active</span>
+                      ) : (
+                        <span className="badge text-bg-secondary">Inactive</span>
+                      )}
+                    </td>
+                    <td>
+                      <div className="d-flex gap-2">
+                        <Link to={`/admin/products/edit/${p.id}`} className="btn btn-sm btn-outline-primary">
+                          Sửa
+                        </Link>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(p.id)}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
