@@ -30,25 +30,15 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
+
         <div className="col-md-4">
           <div className="card shadow-sm h-100">
             <div className="card-body">
               <h4>Quản lý người dùng</h4>
-              <p className="text-muted">Xem, sửa, khóa tài khoản người dùng</p>
+              <p className="text-muted">Xem, sửa, khóa và tạo tài khoản người dùng</p>
               <Link to="/admin/users" className="btn btn-dark">
                 Vào quản lý user
               </Link>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <h4>Thống kê</h4>
-              <p className="text-muted">Theo dõi doanh thu và tình trạng đơn hàng</p>
-              <button className="btn btn-outline-secondary" disabled>
-                Sắp phát triển
-              </button>
             </div>
           </div>
         </div>

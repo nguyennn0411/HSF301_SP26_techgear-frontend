@@ -63,7 +63,7 @@ const AdminUserForm = () => {
         alert('Cập nhật user thành công');
       } else {
         await createAdminUser(formData);
-        alert('Tạo user thành công');
+        alert('Tạo user thành công. Mật khẩu tạm đã được gửi qua email.');
       }
 
       navigate('/admin/users');
@@ -79,6 +79,12 @@ const AdminUserForm = () => {
 
       <div className="card shadow-sm">
         <div className="card-body">
+          {!isEdit && (
+            <div className="alert alert-info">
+              Khi tạo tài khoản mới, hệ thống sẽ tự sinh mật khẩu tạm và gửi qua email đăng ký.
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
               <div className="col-md-6">
@@ -114,19 +120,18 @@ const AdminUserForm = () => {
                 />
               </div>
 
-              <div className="col-md-6">
-                <label className="form-label">
-                  {isEdit ? 'Mật khẩu mới (không bắt buộc)' : 'Mật khẩu'}
-                </label>
-                <input
-                  type="password"
-                  className="form-control"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required={!isEdit}
-                />
-              </div>
+              {isEdit && (
+                <div className="col-md-6">
+                  <label className="form-label">Mật khẩu mới (không bắt buộc)</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                </div>
+              )}
 
               <div className="col-md-4">
                 <label className="form-label">Role</label>
